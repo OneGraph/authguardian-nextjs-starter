@@ -1,6 +1,7 @@
 import OneGraphAuth from "onegraph-auth";
 import Head from "next/head";
 import fetchSupportedServicesQuery from "../common/fetchSupportedServices.js";
+import copy from "copy-to-clipboard";
 
 const appId = process.env.oneGraphAppId;
 
@@ -17,8 +18,19 @@ if (typeof window !== "undefined") {
   };
 }
 
+let autodetectedGitHubLink;
+
+if (process.env.gitHubOrg && process.env.gitHubRepo) {
+  autodetectedGitHubLink = `https://github.com/${process.env.gitHubOrg}/${process.env.gitHubRepo}`;
+}
+
+let checkoutLink;
+if (process.env.gitHubOrg && process.env.gitHubRepo) {
+  checkoutLink = `git@github.com:${process.env.gitHubOrg}/${process.env.gitHubRepo}.git`;
+}
+
 const gitHubLink =
-  process.env.GITHUB_URL ||
+  autodetectedGitHubLink ||
   "https://github.com/OneGraph/authguardian-react-starter";
 
 const exampleUsage = (appId, service) => {
@@ -92,6 +104,8 @@ const gitHubIcon = (
 );
 
 function navBar(appId) {
+  const [copied, setCopied] = React.useState(false);
+
   return (
     <header>
       <nav>
@@ -120,6 +134,25 @@ function navBar(appId) {
             <a href={gitHubLink} target="_blank" rel="noopener noreferrer">
               {gitHubIcon}
             </a>
+          </li>
+          <li>
+            {!!checkoutLink ? (
+              <button
+                onClick={(event) => {
+                  copy(`git checkout ${checkoutLink}`, {
+                    message: "Copy/paste to check out your git repo locally",
+                    format: "text/plain",
+                    onCopy: () => {
+                      setCopied(() => true);
+                    },
+                  });
+                }}
+              >
+                {copied
+                  ? "Copied! Paste to check out your git Repo"
+                  : "Check out locally"}
+              </button>
+            ) : null}
           </li>
         </ul>
       </nav>
@@ -176,14 +209,14 @@ function Home() {
       {state.corsConfigurationRequired ? corsPrompt(appId) : navBar(appId)}
 
       <Head>
-        <title>Create Next App</title>
+        <title>OneGraph AuthGuardian Next.js Starter</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <h1 className="title">
           Welcome to the <a href="https://nextjs.org">Next.js</a> AuthGuardian
-          Starterkit!
+          Starter!
         </h1>
         <header className="App-header">
           <p className="description">

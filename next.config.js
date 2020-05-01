@@ -1,6 +1,7 @@
 module.exports = {
   env: {
     oneGraphAppId: process.env.ONE_GRAPH_APP_ID,
-    gitHubLink: process.env.GITHUB_URL,
+    gitHubOrg: process.env.VERCEL_GITHUB_ORG,
+    gitHubRepo: process.env.VERCEL_GITHUB_REPO,
   },
 };
