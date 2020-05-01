@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "export": "next export"
   },
   "dependencies": {
+    "isomorphic-fetch": "^2.2.1",
     "next": "9.3.5",
+    "onegraph-auth": "^2.2.2",
     "react": "16.13.1",
     "react-dom": "16.13.1"
   }
