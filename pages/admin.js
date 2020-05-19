@@ -15,8 +15,26 @@ import {
 } from '../lib/common'
 import { useFetchSupportedServices } from '../lib/fetchSupportedServices'
 import useSWR from 'swr'
+import ErrorPage from 'next/error'
 
-export default function Index({ allPosts }) {
+export default function Index({
+  allPosts,
+  isAdmin,
+  isLoggedIn,
+  userId,
+  adminData,
+}) {
+  if (!isLoggedIn) {
+    if (typeof window !== 'undefined') {
+      window.location = '/login'
+    }
+    return 'Redirecting you to log in...'
+  }
+
+  if (!isAdmin) {
+    return <ErrorPage title="Get outta here" statusCode={403} />
+  }
+
   const [state, setState] = React.useState({
     mostRecentService: null,
   })
@@ -35,98 +53,13 @@ export default function Index({ allPosts }) {
     [auth.accessToken()]
   )
 
-  const heroPost = allPosts[0]
-  const morePosts = allPosts.slice(1)
-
   return (
     <>
       <Layout>
         <Head>
-          <title>Next.js Blog Example with {CMS_NAME}</title>
+          <title>Next.js Secure Admin Page {CMS_NAME}</title>
         </Head>
-        <Container>
-          {corsConfigurationRequired ? corsPrompt(appId) : null}
-          {heroPost && (
-            <HeroPost
-              title={heroPost.title}
-              coverImage={heroPost.coverImage}
-              date={heroPost.date}
-              author={heroPost.author}
-              slug={heroPost.slug}
-              excerpt={heroPost.excerpt}
-            />
-          )}
-          {morePosts.length > 0 && <MoreStories posts={morePosts} />}
-          <header className="App-header">
-            <p className="description">
-              Your OneGraph auth JWT preview:{' '}
-              <button
-                onClick={() => {
-                  auth.destroy()
-                }}
-              >
-                [Logout]
-              </button>
-            </p>
-            <textarea
-              className="jwt-preview card"
-              rows={15}
-              value={!!user ? JSON.stringify(user, null, 2) : 'No OneGraph JWT'}
-              readOnly={true}
-            ></textarea>
-            <br />
-            <textarea
-              className="jwt-preview"
-              style={{ userSelect: 'all' }}
-              rows={1}
-              value={
-                !!auth.accessToken() && !!auth.accessToken().accessToken
-                  ? auth.accessToken().accessToken
-                  : ''
-              }
-              readOnly={true}
-            ></textarea>
-          </header>
-          <div className="grid">
-            {(supportedServices || []).map((service) => {
-              return (
-                <button
-                  key={service.slug}
-                  className="card"
-                  onClick={async () => {
-                    await auth.login(service.slug)
-                    const isLoggedIn = await auth.isLoggedIn(service.slug)
-                    setState((oldState) => {
-                      return {
-                        ...oldState,
-                        [service.slug]: isLoggedIn,
-                        mostRecentService: service,
-                      }
-                    })
-                  }}
-                >
-                  {!!state[service.slug] ? ' ✓' : ''}{' '}
-                  <h3>{service.friendlyServiceName} &rarr;</h3>
-                </button>
-              )
-            })}
-          </div>{' '}
-          {!state.mostRecentService ? null : (
-            <>
-              <h3>
-                Add 'Sign in with {state.mostRecentService.friendlyServiceName}'
-                to your React app
-              </h3>
-              <textarea
-                className="card"
-                style={{ marginBottom: '250px' }}
-                rows={15}
-                value={exampleUsage(appId, state.mostRecentService)}
-                readOnly={true}
-              ></textarea>
-            </>
-          )}
-        </Container>
+        <Container>Hi there</Container>
       </Layout>
 
       <style jsx>{`
@@ -286,9 +219,38 @@ export default function Index({ allPosts }) {
   )
 }
 
-export async function getStaticProps({ preview = false }) {
-  const allPosts = (await getAllPostsForHome(preview)) || []
+// export async function getStaticProps({ preview = false }) {
+//   const allPosts = (await getAllPostsForHome(preview)) || []
+//   return {
+//     props: { allPosts },
+//   }
+// }
+
+export async function getServerSideProps(ctx) {
+  var cookie = require('cookie')
+  var atob = require('atob')
+
+  var cookies = cookie.parse(ctx.req?.headers?.cookie || '')
+  let agCookie = {}
+  try {
+    agCookie = JSON.parse(
+      atob((cookies.authGuardian || '').split('.')[1] || '') || '{}'
+    )
+  } catch (e) {
+    console.log('Whoops, ', e)
+  }
+
+  console.log('Cookies: ', cookies)
+  console.log('AG Cookie: ', agCookie)
+
+  const userId = agCookie?.user?.id || null
+
+  const isAdmin = (agCookie?.user?.roles || []).includes('admin')
+  const isLoggedIn = !!userId
+
+  const allPosts = []
+  const adminData = 'Only a logged in user can see this'
   return {
-    props: { allPosts },
+    props: { allPosts, isAdmin, isLoggedIn, userId, adminData },
   }
 }

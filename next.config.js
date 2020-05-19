@@ -1,9 +1,8 @@
-console.log("Build env: ", process.env);
+require('dotenv').config()
 
 module.exports = {
   env: {
-    oneGraphAppId: process.env.ONE_GRAPH_APP_ID,
-    gitHubOrg: process.env.VERCEL_GITHUB_ORG,
-    gitHubRepo: process.env.VERCEL_GITHUB_REPO,
+    NEXT_EXAMPLE_CMS_DATOCMS_API_TOKEN:
+      process.env.NEXT_EXAMPLE_CMS_DATOCMS_API_TOKEN,
   },
-};
+}
